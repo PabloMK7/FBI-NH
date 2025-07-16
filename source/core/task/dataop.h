@@ -43,8 +43,8 @@ typedef struct data_op_data_s {
     Result (*openSrc)(void* data, u32 index, u32* handle);
     Result (*closeSrc)(void* data, u32 index, bool succeeded, u32 handle);
 
-    Result (*getSrcSize)(void* data, u32 handle, u64* size);
-    Result (*readSrc)(void* data, u32 handle, u32* bytesRead, void* buffer, u64 offset, u32 size);
+    Result (*getSrcSize)(void* data, u32 index, u32 handle, u64* size);
+    Result (*readSrc)(void* data, u32 index, u32 handle, u32* bytesRead, void* buffer, u64 offset, u32 size);
 
     // Download
     Result (*getSrcUrl)(void* data, u32 index, char* url, size_t maxSize);

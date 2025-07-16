@@ -3,6 +3,7 @@
 #include "data/data.h"
 #include "task/task.h"
 #include "ui/ui.h"
+#include "z3ds/z3ds.h"
 
 #include "clipboard.h"
 #include "error.h"

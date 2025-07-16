@@ -40,7 +40,7 @@ VERSION_MICRO := $(word 3, $(VERSION_PARTS))
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
 SOURCES		:=	source/core source/core/data source/core/task source/core/ui \
-				source/fbi source/fbi/action source/fbi/task \
+				source/core/z3ds source/fbi source/fbi/action source/fbi/task \
 				source/libs/quirc source/libs/stb_image
 DATA		:=
 INCLUDES	:=
@@ -59,6 +59,10 @@ UNIQUE_ID := 0xF8001
 BANNER_AUDIO := $(TOPDIR)/meta/audio_3ds.wav
 BANNER_IMAGE := $(TOPDIR)/meta/banner_3ds.cgfx
 
+ZSTD_DIR  		:= $(CURDIR)/externals/zstd
+ZSTD_OUT  		?= $(CURDIR)/$(BUILD)/zstd
+ZSTD_SEEK_DIR   := $(ZSTD_DIR)/contrib/seekable_format
+
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
@@ -75,7 +79,7 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lcitro3d -lctru -lm -lz -ljansson
+LIBS	:= -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lcitro3d -lctru -lm -lz -ljansson -lzstd-seekable -lzstd 
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -107,6 +111,9 @@ PICAFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.v.pica)))
 SHLISTFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.shlist)))
 GFXFILES	:=	$(foreach dir,$(GRAPHICS),$(notdir $(wildcard $(dir)/*.t3s)))
 BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+
+ZSTD_SEEK_OBJS := $(addprefix $(ZSTD_OUT)/seek/,\
+                     zstdseek_compress.o zstdseek_decompress.o)
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
@@ -149,9 +156,12 @@ export HFILES	:=	$(PICAFILES:.v.pica=_shbin.h) $(SHLISTFILES:.shlist=_shbin.h) \
 
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-			-I$(CURDIR)/$(BUILD)
+			-I$(CURDIR)/$(BUILD) \
+			-I$(ZSTD_SEEK_DIR) \
+			-I$(ZSTD_DIR)/lib/common
 
-export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) \
+			-L$(ZSTD_OUT)
 
 export _3DSXDEPS	:=	$(if $(NO_SMDH),,$(OUTPUT).smdh)
 
@@ -176,11 +186,27 @@ ifneq ($(ROMFS),)
 	export _3DSXFLAGS += --romfs=$(CURDIR)/$(ROMFS)
 endif
 
-.PHONY: all clean
+.PHONY: all clean zstd-seekable
 
 #---------------------------------------------------------------------------------
-all: $(BUILD) $(GFXBUILD) $(DEPSDIR) $(ROMFS_T3XFILES) $(T3XHFILES)
+
+all: $(BUILD) $(GFXBUILD) $(DEPSDIR) $(ROMFS_T3XFILES) $(T3XHFILES) zstd-seekable
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+
+#---------------------------------------------------------------------------------
+# Build the Zstandard seekable static library
+#---------------------------------------------------------------------------------
+
+$(ZSTD_OUT)/seek/%.o: $(ZSTD_SEEK_DIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
+
+$(ZSTD_OUT)/libzstd-seekable.a: $(ZSTD_SEEK_OBJS)
+	@$(AR) rcs $@ $^
+
+zstd-seekable: $(ZSTD_OUT)/libzstd-seekable.a
+
+#---------------------------------------------------------------------------------
 
 $(BUILD):
 	@mkdir -p $@

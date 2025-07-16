@@ -27,11 +27,11 @@ static Result dumpnand_close_src(void* data, u32 index, bool succeeded, u32 hand
     return FSFILE_Close(handle);
 }
 
-static Result dumpnand_get_src_size(void* data, u32 handle, u64* size) {
+static Result dumpnand_get_src_size(void* data, u32 index, u32 handle, u64* size) {
     return FSFILE_GetSize(handle, size);
 }
 
-static Result dumpnand_read_src(void* data, u32 handle, u32* bytesRead, void* buffer, u64 offset, u32 size) {
+static Result dumpnand_read_src(void* data, u32 index, u32 handle, u32* bytesRead, void* buffer, u64 offset, u32 size) {
     return FSFILE_Read(handle, bytesRead, offset, buffer, size);
 }
 

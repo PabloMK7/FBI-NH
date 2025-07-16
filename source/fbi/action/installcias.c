@@ -59,6 +59,10 @@ static Result action_install_cias_open_src(void* data, u32 index, u32* handle) {
     if(fsPath != NULL) {
         res = FSUSER_OpenFile(handle, info->archive, *fsPath, FS_OPEN_READ, 0);
 
+        if (info->ciaInfo.isZ3DS && R_SUCCEEDED(res)) {
+            *handle = (Handle)Z3DS_Create(*handle);
+        }
+
         fs_free_path_utf8(fsPath);
     } else {
         res = R_APP_OUT_OF_MEMORY;
@@ -74,7 +78,13 @@ static Result action_install_cias_close_src(void* data, u32 index, bool succeede
 
     Result res = 0;
 
-    if(R_SUCCEEDED(res = FSFILE_Close(handle)) && installData->delete && succeeded) {
+    if (info->ciaInfo.isZ3DS) {
+        Z3DS_Free((Z3DS_FILE*)handle, true);
+    } else {
+        res = FSFILE_Close(handle);
+    }
+
+    if(R_SUCCEEDED(res) && installData->delete && succeeded) {
         FS_Path* fsPath = fs_make_path_utf8(info->path);
         if(fsPath != NULL) {
             if(R_SUCCEEDED(FSUSER_DeleteFile(info->archive, *fsPath))) {
@@ -101,12 +111,28 @@ static Result action_install_cias_close_src(void* data, u32 index, bool succeede
     return res;
 }
 
-static Result action_install_cias_get_src_size(void* data, u32 handle, u64* size) {
-    return FSFILE_GetSize(handle, size);
+static Result action_install_cias_get_src_size(void* data, u32 index, u32 handle, u64* size) {
+    install_cias_data* installData = (install_cias_data*) data;
+
+    file_info* info = (file_info*) ((list_item*) linked_list_get(&installData->contents, index))->data;
+
+    if (info->ciaInfo.isZ3DS) {
+        return Z3DS_GetUncompressedSize((Z3DS_FILE*)handle, size);
+    } else {
+        return FSFILE_GetSize(handle, size);
+    }
 }
 
-static Result action_install_cias_read_src(void* data, u32 handle, u32* bytesRead, void* buffer, u64 offset, u32 size) {
-    return FSFILE_Read(handle, bytesRead, offset, buffer, size);
+static Result action_install_cias_read_src(void* data, u32 index, u32 handle, u32* bytesRead, void* buffer, u64 offset, u32 size) {
+    install_cias_data* installData = (install_cias_data*) data;
+
+    file_info* info = (file_info*) ((list_item*) linked_list_get(&installData->contents, index))->data;
+
+    if (info->ciaInfo.isZ3DS) {
+        return Z3DS_Read((Z3DS_FILE*)handle, bytesRead, offset, buffer, size);
+    } else {
+        return FSFILE_Read(handle, bytesRead, offset, buffer, size);
+    }
 }
 
 static Result action_install_cias_open_dst(void* data, u32 index, void* initialReadBlock, u64 size, u32* handle) {

@@ -49,20 +49,40 @@ static void task_populate_files_retrieve_meta(file_info* fileInfo) {
             FSFILE_GetSize(fileHandle, &fileInfo->size);
 
             if(fileInfo->isCia) {
+                bool isZ3DS = Z3DS_IsFile(fileHandle, "CIA", 3);
+                Z3DS_FILE* zfile = NULL;
+                if (isZ3DS) {
+                    zfile = Z3DS_Create(fileHandle);
+                }
+
                 AM_TitleEntry titleEntry;
-                if(R_SUCCEEDED(AM_GetCiaFileInfo(MEDIATYPE_SD, &titleEntry, fileHandle))) {
+                Result res = 0;
+                if (isZ3DS) {
+                    Z3DS_Metadata_Item item = Z3DS_GetMetadataItem(zfile, "titleinfo");
+                    if (!item.found || item.size != sizeof(AM_TitleEntry)) {
+                        res = R_APP_BAD_DATA;
+                    } else {
+                        memcpy(&titleEntry, item.value, sizeof(AM_TitleEntry));
+                    }
+                } else {
+                    res = AM_GetCiaFileInfo(MEDIATYPE_SD, &titleEntry, fileHandle);
+                }
+
+                if(R_SUCCEEDED(res)) {
+                    fileInfo->ciaInfo.isZ3DS = isZ3DS;
                     fileInfo->ciaInfo.titleId = titleEntry.titleID;
                     fileInfo->ciaInfo.version = titleEntry.version;
                     fileInfo->ciaInfo.installedSize = titleEntry.size;
                     fileInfo->ciaInfo.hasMeta = false;
+                    fileInfo->ciaInfo.installedSizeAprox = isZ3DS;
 
-                    if(fs_get_title_destination(titleEntry.titleID) != MEDIATYPE_SD && R_SUCCEEDED(AM_GetCiaFileInfo(MEDIATYPE_NAND, &titleEntry, fileHandle))) {
+                    if(!isZ3DS && fs_get_title_destination(titleEntry.titleID) != MEDIATYPE_SD && R_SUCCEEDED(AM_GetCiaFileInfo(MEDIATYPE_NAND, &titleEntry, fileHandle))) {
                         fileInfo->ciaInfo.installedSize = titleEntry.size;
                     }
 
                     SMDH* smdh = (SMDH*) calloc(1, sizeof(SMDH));
                     if(smdh != NULL) {
-                        if(R_SUCCEEDED(cia_file_get_smdh(smdh, fileHandle))) {
+                        if(R_SUCCEEDED(cia_file_get_smdh(smdh, fileHandle, zfile))) {
                             if(smdh->magic[0] == 'S' && smdh->magic[1] == 'M' && smdh->magic[2] == 'D' && smdh->magic[3] == 'H') {
                                 SMDH_title* smdhTitle = smdh_select_title(smdh);
 
@@ -82,6 +102,9 @@ static void task_populate_files_retrieve_meta(file_info* fileInfo) {
                     fileInfo->ciaInfo.loaded = true;
                 } else {
                     fileInfo->isCia = false;
+                }
+                if (isZ3DS) {
+                    Z3DS_Free(zfile, false);
                 }
             } else if(fileInfo->isTicket) {
                 u32 bytesRead = 0;

@@ -35,7 +35,7 @@ static Result action_export_twl_save_close_src(void* data, u32 index, bool succe
     return spi_deinit_card();
 }
 
-static Result action_export_twl_save_get_src_size(void* data, u32 handle, u64* size) {
+static Result action_export_twl_save_get_src_size(void* data, u32 index, u32 handle, u64* size) {
     Result res = 0;
 
     u32 saveSize = 0;
@@ -46,7 +46,7 @@ static Result action_export_twl_save_get_src_size(void* data, u32 handle, u64* s
     return res;
 }
 
-static Result action_export_twl_save_read_src(void* data, u32 handle, u32* bytesRead, void* buffer, u64 offset, u32 size) {
+static Result action_export_twl_save_read_src(void* data, u32 index, u32 handle, u32* bytesRead, void* buffer, u64 offset, u32 size) {
     return spi_read_save(bytesRead, buffer, (u32) offset, size);
 }
 

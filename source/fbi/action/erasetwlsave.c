@@ -36,7 +36,7 @@ static Result action_erase_twl_save_close_src(void* data, u32 index, bool succee
     return 0;
 }
 
-static Result action_erase_twl_save_get_src_size(void* data, u32 handle, u64* size) {
+static Result action_erase_twl_save_get_src_size(void* data, u32 index, u32 handle, u64* size) {
     Result res = 0;
 
     u32 saveSize = 0;
@@ -47,7 +47,7 @@ static Result action_erase_twl_save_get_src_size(void* data, u32 handle, u64* si
     return res;
 }
 
-static Result action_erase_twl_save_read_src(void* data, u32 handle, u32* bytesRead, void* buffer, u64 offset, u32 size) {
+static Result action_erase_twl_save_read_src(void* data, u32 index, u32 handle, u32* bytesRead, void* buffer, u64 offset, u32 size) {
     memset(buffer, 0, size);
     *bytesRead = size;
 

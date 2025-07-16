@@ -119,11 +119,11 @@ static Result action_paste_contents_close_src(void* data, u32 index, bool succee
     return FSFILE_Close(handle);
 }
 
-static Result action_paste_contents_get_src_size(void* data, u32 handle, u64* size) {
+static Result action_paste_contents_get_src_size(void* data, u32 index, u32 handle, u64* size) {
     return FSFILE_GetSize(handle, size);
 }
 
-static Result action_paste_contents_read_src(void* data, u32 handle, u32* bytesRead, void* buffer, u64 offset, u32 size) {
+static Result action_paste_contents_read_src(void* data, u32 index, u32 handle, u32* bytesRead, void* buffer, u64 offset, u32 size) {
     return FSFILE_Read(handle, bytesRead, offset, buffer, size);
 }
 

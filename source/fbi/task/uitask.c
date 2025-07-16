@@ -153,10 +153,10 @@ void task_draw_file_info(ui_view* view, void* data, float x1, float y1, float x2
                                     "Title ID: %016llX\n"
                                             "Version: %hu (%d.%d.%d)\n"
                                             "Region: %s\n"
-                                            "Installed Size: %.2f %s",
+                                            "Installed Size: %s%.2f %s",
                                     info->ciaInfo.titleId,
                                     info->ciaInfo.version, (info->ciaInfo.version >> 10) & 0x3F, (info->ciaInfo.version >> 4) & 0x3F, info->ciaInfo.version & 0xF,
-                                    regionString,
+                                    regionString, info->ciaInfo.installedSizeAprox ? "approx. " : "",
                                     ui_get_display_size(info->ciaInfo.installedSize),
                                     ui_get_display_size_units(info->ciaInfo.installedSize));
         } else if(info->isTicket && info->ticketInfo.loaded) {

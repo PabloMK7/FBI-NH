@@ -209,7 +209,8 @@ bool fs_filter_cias(void* data, const char* name, u32 attributes) {
     }
 
     size_t len = strlen(name);
-    return len >= 4 && strncasecmp(name + len - 4, ".cia", 4) == 0;
+    return (len >= 4 && strncasecmp(name + len - 4, ".cia", 4) == 0) || 
+            (len >= 5 && strncasecmp(name + len - 5, ".zcia", 5) == 0);
 }
 
 bool fs_filter_tickets(void* data, const char* name, u32 attributes) {

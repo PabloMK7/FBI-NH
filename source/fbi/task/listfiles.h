@@ -10,10 +10,12 @@ typedef struct list_item_s list_item;
 
 typedef struct cia_info_s {
     bool loaded;
+    bool isZ3DS;
 
     u64 titleId;
     u16 version;
     u64 installedSize;
+    bool installedSizeAprox;
     bool hasMeta;
     meta_info meta;
 } cia_info;

@@ -47,7 +47,7 @@ static Result task_data_op_copy(data_op_data* data, u32 index) {
     } else {
         u32 srcHandle = 0;
         if(R_SUCCEEDED(res = data->openSrc(data->data, index, &srcHandle))) {
-            if(R_SUCCEEDED(res = data->getSrcSize(data->data, srcHandle, &data->currTotal))) {
+            if(R_SUCCEEDED(res = data->getSrcSize(data->data, index, srcHandle, &data->currTotal))) {
                 if(data->currTotal == 0) {
                     if(data->copyEmpty) {
                         u32 dstHandle = 0;
@@ -73,7 +73,7 @@ static Result task_data_op_copy(data_op_data* data, u32 index) {
                             }
 
                             u32 bytesRead = 0;
-                            if(R_FAILED(res = data->readSrc(data->data, srcHandle, &bytesRead, buffer, data->currProcessed, data->bufferSize))) {
+                            if(R_FAILED(res = data->readSrc(data->data, index, srcHandle, &bytesRead, buffer, data->currProcessed, data->bufferSize))) {
                                 break;
                             }
 
